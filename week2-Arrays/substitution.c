@@ -4,7 +4,13 @@
 #include <string.h>
 #include <ctype.h>
 
+
 bool check_command_line(int argc, string argv[]);
+bool is_valid_key(string key);
+bool is_key_alpha(string key);
+bool is_repeated_key(string key);
+void encrypt(string text, string key);
+
 
 int main(int argc, string argv[])
 {
@@ -13,73 +19,105 @@ int main(int argc, string argv[])
         return 1;
     }
 
+    string key = argv[1];
     string text = get_string("plaintext: ");
-
-    string alphabet_lower = "abcdefghijklmnopqrstuvwxyz";
-    string alphabet_upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-
-    for (int i = 0, n = strlen(text); i < n; i++)
-    {
-        for (int j = 0, alphabet = 26; j < alphabet; j++)
-        {
-            if (text[i] == alphabet_lower[j] || text[i] == alphabet_upper[j])
-            {
-                if (islower(text[i]))
-                {
-                    text[i] = tolower(argv[1][j]);
-                    break;
-                }
-                else
-                {
-                    text[i] = toupper(argv[1][j]);
-                    break;
-                }
-            }
-        }
-    }
-
+    encrypt(text, key);
     printf("ciphertext: %s\n", text);
 }
 
+
 bool check_command_line(int argc, string argv[])
 {
-    if (argc != 2)
+    bool has_two_arguments = argc == 2;
+    if (!has_two_arguments)
     {
         printf("Usage: ./substitution Key\n");
         return false;
     }
 
-    if (strlen(argv[1]) != 26)
+    string key = argv[1];
+    if (!is_valid_key(key))
+    {
+        return false;
+    }
+
+    return true;
+}
+
+
+bool is_valid_key(string key)
+{
+    bool has_twenty_six_letters = strlen(key) == 26;
+    if (!has_twenty_six_letters)
     {
         printf("Key must contain 26 characters.\n");
         return false;
     }
 
-    for (int i = 0, n = strlen(argv[1]); i < n; i++)
+    if (!is_key_alpha(key))
     {
-        if (!isalpha(argv[1][i]))
+        return false;
+    }
+
+    if (is_repeated_key(key))
+    {
+        return false;
+    }
+
+    return true;
+}
+
+
+bool is_key_alpha(string key)
+{
+    for (int i = 0, n = strlen(key); i < n; i++)
+    {
+        if (!isalpha(key[i]))
         {
             printf("Key must contain alphabetic characters.\n");
             return false;
         }
     }
+    return true;
+}
 
-    int penultimate = strlen(argv[1]) - 1;
-    int descending = penultimate;
-    char current_position, front_position;
-    for (int i = 0; i < penultimate; i++, descending--)
+
+bool is_repeated_key(string key)
+{
+    int key_length = strlen(key);
+    for (int i = 0; i < key_length; i++)
     {
-        current_position = argv[1][i];
-        for (int j = 0; j < descending; j++)
+        for (int j = i + 1; j < key_length; j++)
         {
-            front_position = argv[1][j + i + 1];
-            if (current_position == front_position)
+            if (key[i] == key[j])
             {
-                printf("Key must not contain repeated characteres.\n");
-                return false;
+                printf("The key cannot contain repeated characters.\n");
+                return true;
             }
         }
     }
+    return false;
+}
 
-    return true;
+
+void encrypt(string text, string key)
+{
+    int key_index;
+    int text_len = strlen(text);
+    for (int i = 0; i < text_len; i++)
+    {
+        if (isalpha(text[i]))
+        {
+            if (islower(text[i]))
+            {
+                key_index = tolower(text[i]) - 'a';
+                text[i] = tolower(key[key_index]);
+            }
+            else
+            {
+                key_index = toupper(text[i]) - 'A';
+                text[i] = toupper(key[key_index]);
+            }
+        }
+    }
 }
